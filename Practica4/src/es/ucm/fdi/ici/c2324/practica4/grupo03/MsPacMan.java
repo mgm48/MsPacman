@@ -1,0 +1,66 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03;
+
+import java.io.File;
+import java.util.HashMap;
+
+
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.MsPacmanInput;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.AttractGhostsToPowerPillAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.ChaseClosestEdibleAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.DifferentPathToPowerPillAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.EatPillsAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.EatPowerPillsAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.EscapeRouteAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.RandomAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.RunAwayClosestChasingGhostAction;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions.SectionMoveAction;
+import es.ucm.fdi.ici.rules.RuleEngine;
+import es.ucm.fdi.ici.rules.RulesAction;
+import es.ucm.fdi.ici.rules.RulesInput;
+import pacman.controllers.PacmanController;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class MsPacMan extends PacmanController {
+	private static final String RULES_PATH = "es"+File.separator+"ucm"+File.separator+"fdi"+File.separator+"ici"+File.separator+"c2324"+File.separator+"practica4"+File.separator+"grupo03"+File.separator+"MsPacmanrules.clp";
+	HashMap<String,RulesAction> map;
+	RuleEngine PacmanRuleEngines;
+	
+	public MsPacMan() {
+		setName("Pacwoman 03");
+		setTeam("Team 03");
+		
+		map = new HashMap<String,RulesAction>();
+		//Fill Actions
+		RulesAction PacmanRandom = new RandomAction();
+		RulesAction PacmanrunsAway = new RunAwayClosestChasingGhostAction();
+		RulesAction Pacmanchases = new ChaseClosestEdibleAction();
+		RulesAction PacmaneatPills = new EatPillsAction();
+		RulesAction PacmaneatPPills = new EatPowerPillsAction();
+		RulesAction PacmanattractGhost = new AttractGhostsToPowerPillAction();
+		RulesAction PacmandiferentPathToPP = new DifferentPathToPowerPillAction();
+		RulesAction PacmanescapeRouteChasing = new EscapeRouteAction();
+		RulesAction PacmansectionMove = new SectionMoveAction();
+		
+		map.put("PacmanRandom", PacmanRandom);
+		map.put("PacmanrunsAway", PacmanrunsAway);
+		map.put("Pacmanchases", Pacmanchases);
+		map.put("PacmaneatPills", PacmaneatPills);
+		map.put("PacmaneatPPills", PacmaneatPPills);
+		map.put("PacmanattractGhost", PacmanattractGhost);
+		map.put("PacmandiferentPathToPP", PacmandiferentPathToPP);
+		map.put("PacmanescapeRouteChasing", PacmanescapeRouteChasing);
+		map.put("PacmansectionMove", PacmansectionMove);
+		
+		PacmanRuleEngines = new RuleEngine("MsPacman",RULES_PATH, map);
+	}
+	@Override
+	public MOVE getMove(Game game, long timeDue) {
+		RulesInput input = new MsPacmanInput(game);
+		PacmanRuleEngines.reset();
+		PacmanRuleEngines.assertFacts(input.getFacts());
+		
+		return PacmanRuleEngines.run(game);
+	}
+
+}

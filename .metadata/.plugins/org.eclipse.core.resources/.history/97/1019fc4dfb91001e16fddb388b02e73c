@@ -1,0 +1,58 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions;
+
+import es.ucm.fdi.ici.Action;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.Utils;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+
+public class DifferentPathToPowerPillAction implements Action {
+	
+	private int targetPowerPillIndex;
+
+    /*public DifferentPathToPowerPillAction(int targetPowerPillIndex) {
+        this.targetPowerPillIndex = targetPowerPillIndex;
+    }*/
+	
+	
+	
+	@Override
+	public String getActionId() {
+		return "DifferentPathToPowerPill";
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		int targetPowerPillIndex = game.getClosestNodeIndexFromNodeIndex(game.getPacmanCurrentNodeIndex(), game.getActivePowerPillsIndices(), DM.PATH);;
+		int pacmanNodeIndex = game.getPacmanCurrentNodeIndex();
+        int powerPillNodeIndex = game.getPowerPillIndex(targetPowerPillIndex);
+        MOVE bestMove = null;
+        MOVE moveAlFantasma = game.getApproximateNextMoveTowardsTarget(pacmanNodeIndex, powerPillNodeIndex, game.getPacmanLastMoveMade(), DM.PATH);
+        int shortestDistance = Integer.MAX_VALUE;
+        // Si el fantasma está en el camino, busca un camino alternativo.
+        for(MOVE move : game.getPossibleMoves(pacmanNodeIndex, game.getPacmanLastMoveMade())) {
+        	if(move != moveAlFantasma) {
+        		int nextNodeIndex = game.getNeighbour(pacmanNodeIndex, move);
+        		if (nextNodeIndex != -1) {
+                    int distance = game.getShortestPathDistance(nextNodeIndex, powerPillNodeIndex);
+
+                    if (distance < shortestDistance) {
+                        shortestDistance = distance;
+                        bestMove = move;
+                    }
+                }
+        	}
+        	
+        }
+        
+        //MOVE move = game.getApproximateNextMoveAwayFromTarget(pacmanNodeIndex, ghostNodeIndex, game.getPacmanLastMoveMade(), DM.PATH);
+        return bestMove;
+        
+	}
+
+	
+	
+	
+}

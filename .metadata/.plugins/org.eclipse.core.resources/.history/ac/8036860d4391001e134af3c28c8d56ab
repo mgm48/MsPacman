@@ -1,0 +1,21 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.pacman;
+
+import java.util.Collection;
+
+import es.ucm.fdi.ici.rules.RulesInput;
+
+public class PacmanInput extends RulesInput {
+
+	@Override
+	public Collection<String> getFacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void parseInput() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

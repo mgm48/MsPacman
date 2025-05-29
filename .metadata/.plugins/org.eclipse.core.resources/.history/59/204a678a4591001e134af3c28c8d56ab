@@ -1,0 +1,113 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.pacman;
+
+import java.util.Collection;
+import java.util.Arrays;
+import java.util.EnumMap;
+
+import es.ucm.fdi.ici.rules.RulesInput;
+import pacman.game.Game;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+
+
+
+public class PacmanInput extends RulesInput {
+	private String nearGhostEdible;
+	private String nearGhostChasing;
+	private double nearGhostEdibleDistance;
+	private double nearGhostChasingDistance;
+	private boolean pacmandead;
+	private double mindistancePPill;
+	private int closestPP;
+	private double mindistancePill;
+	private int closestpill;
+	private boolean securePathToEdibleGhost;
+	private boolean securePathToPP;
+	private boolean securePathToPill;
+
+	private MOVE lastmove;
+	private int  pc;
+	private EnumMap<GHOST,Integer> gs;	
+
+
+	public PacmanInput(Game game) {
+		super(game);
+		this.gs = new EnumMap<GHOST, Integer>(GHOST.class);
+	}
+
+	@Override
+	public Collection<String> getFacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void parseInput() {
+		this.pc = game.getPacmanCurrentNodeIndex();
+		this.lastmove = game.getPacmanLastMoveMade();
+
+		for (GHOST ghost: GHOST.values()) {
+    		gs.put(ghost, game.getGhostCurrentNodeIndex(ghost));
+		}
+
+		GHOST edible = closestEdibleGhost();
+		GHOST chasing = closestChasingGhost();
+		this.nearGhostEdible = ghostToString(edible);
+		this.nearGhostChasing = ghostToString(chasing);
+		this.nearGhostEdibleDistance = ((edible != null) ? game.getShortestPathDistance(pc, game.getGhostCurrentNodeIndex(edible)) : Double.MAX_VALUE);
+		this.nearGhostChasingDistance = ((chasing != null) ? game.getShortestPathDistance(pc, game.getGhostCurrentNodeIndex(chasing)) : Double.MAX_VALUE);
+		
+	}
+
+	//Calcula el ghost que persigue a pacman mas cercano dentro de un limite
+     public GHOST closestChasingGhost() {
+    	GHOST res = null;
+    	int d = Integer.MAX_VALUE;
+    	
+    	for (GHOST g : GHOST.values()) {
+    		int gn = gs.get(g);
+    		if (!game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {
+    			int aux = game.getShortestPathDistance(gn,pc);
+    			if (aux < d) {
+        			d = aux;
+        			res = g;
+        		}
+    		}	
+    	}
+    	return res;
+    }
+    
+    
+    // Calcula el ghost comible ms cercano a pacman dentro de un limite
+    public GHOST closestEdibleGhost() {
+    	GHOST res = null;
+    	int d = Integer.MAX_VALUE;
+
+    	
+    	for (GHOST g : GHOST.values()) {
+    		int gn = gs.get(g);
+    		if (game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {
+    			int aux = game.getShortestPathDistance(pc, gn, lastmove);
+    			if (aux < d) {
+        			d = aux;
+        			res = g;
+        		}
+    		}
+    	}
+    	return res;
+    }
+	private String ghostToString(GHOST g){
+		if(g == GHOST.BLINKY)
+			return "BLINKY";
+		else if(g == GHOST.INKY)
+			return "INKY";
+		else if(g == GHOST.PINKY)
+			return "PINKY";
+		else if(g == GHOST.SUE)
+			return "SUE";
+		else
+			return "NONE";
+		
+	}
+}

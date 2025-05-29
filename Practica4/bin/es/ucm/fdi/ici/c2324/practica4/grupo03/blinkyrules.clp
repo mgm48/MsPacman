@@ -1,0 +1,150 @@
+;FACTS ASSERTED BY GAME INPUT
+(deftemplate BLINKY
+	(slot edible (type SYMBOL))
+	(slot nearGhostEdible (type SYMBOL) )
+	(slot nearGhostChasing (type SYMBOL) )
+	(slot nearGhostEdibleDistance (type NUMBER))
+	(slot nearGhostChasingDistance (type NUMBER))
+	(slot securePath (type SYMBOL))
+	(slot pacmanClosestPPillDistance (type NUMBER))
+	(slot pacmanDistance (type NUMBER))
+)
+	
+(deftemplate INKY
+	(slot edible (type SYMBOL))
+	(slot nearGhostEdible (type SYMBOL)) 
+	(slot nearGhostChasing (type SYMBOL)) 
+	(slot nearGhostEdibleDistance (type NUMBER))
+	(slot nearGhostChasingDistance (type NUMBER))
+	(slot securePath (type SYMBOL))
+	(slot pacmanClosestPPillDistance (type NUMBER))
+	(slot pacmanDistance (type NUMBER))
+)
+	
+(deftemplate PINKY
+	(slot edible (type SYMBOL))
+	(slot nearGhostEdible (type SYMBOL)) 
+	(slot nearGhostChasing (type SYMBOL)) 
+	(slot nearGhostEdibleDistance (type NUMBER))
+	(slot nearGhostChasingDistance (type NUMBER))
+	(slot securePath (type SYMBOL))
+	(slot pacmanClosestPPillDistance (type NUMBER))
+	(slot pacmanDistance (type NUMBER))
+)
+
+(deftemplate SUE
+	(slot edible (type SYMBOL))
+	(slot nearGhostEdible (type SYMBOL)) 
+	(slot nearGhostChasing (type SYMBOL)) 
+	(slot nearGhostEdibleDistance (type NUMBER))
+	(slot nearGhostChasingDistance (type NUMBER))
+	(slot securePath (type SYMBOL))
+	(slot pacmanClosestPPillDistance (type NUMBER))
+	(slot pacmanDistance (type NUMBER))
+)
+	
+(deftemplate MSPACMAN 
+	(slot closestPPill (type NUMBER))
+	(slot mindistancePPill (type NUMBER))
+	(slot nextJunction (type NUMBER))
+	(slot nearestGhostEdible (type SYMBOL)) 
+	(slot nearestGhostChasing (type SYMBOL))
+)
+	
+;DEFINITION OF THE ACTION FACT
+(deftemplate ACTION
+	(slot id) (slot info (default "")) (slot priority (type NUMBER) ) ; mandatory slots
+	(slot runawaystrategy (type SYMBOL)) ; Extra slot for the runaway action
+	(slot ghost (type SYMBOL))
+	(slot powerpill (type NUMBER))
+	(slot junction (type NUMBER))
+	(slot section (type SYMBOL))
+)
+
+;RULES 
+(defrule BLINKYrunsAwayMSPACMANclosePPill
+	(BLINKY (edible false) (pacmanClosestPPillDistance ?dp))
+	(MSPACMAN (closestPPill ?p) (mindistancePPill ?d)) 
+	(test (>= ?dp ?d))
+	=>
+	(assert 
+		(ACTION (id BLINKYrunsAway) (info "MSPacMan cerca PPill") (priority 50))
+	)
+)
+
+(defrule BLINKYrunsAway
+	(BLINKY (edible true)) 
+	=>  
+	(assert 
+		(ACTION (id BLINKYrunsAway) (info "Comestible --> huir") (priority 30) 
+		)
+	)
+)
+
+(defrule BLINKYchases
+	(BLINKY (edible false)) 
+	=> 
+	(assert (ACTION (id BLINKYchases) (info "No comestible --> perseguir")  (priority 10)))
+)
+	
+(defrule BLINKYrunsAwayEdibleGhosts
+	(BLINKY (edible true) (nearGhostEdible ?g) (nearGhostEdibleDistance ?d))
+	(test (< ?d 20))
+	=> 
+	(assert (ACTION (id BLINKYrunsAwayEdibleGhosts) (info "Cerca de ghost comestible --> huir")  (priority 50) 
+		(ghost ?g))
+	)
+)
+
+(defrule BLINKYrunsToProtectingGhosts
+	(BLINKY (edible true) (nearGhostChasing ?g) (nearGhostEdibleDistance ?d) (securePath true))
+	(test (> ?d 20))
+	=> 
+	(assert (ACTION (id BLINKYrunsToProtectingGhosts) (info "Camino seguro a ghost protecting --> me protegen")  (priority 50) 
+		(ghost ?g))
+	)
+)
+
+(defrule BLINKYblocksPowerPills
+	(MSPACMAN (mindistancePPill ?d) (closestPPill ?p))
+	(BLINKY (edible false) (pacmanClosestPPillDistance ?dp))
+	(test (< ?dp ?d))
+	=> 
+	(assert (ACTION (id BLINKYblocksPowerPills) (info "Más cerca de ppill que pacman --> proteger ppill")  (priority 50) 
+		(powerpill ?p))
+	)
+)
+
+(defrule BLINKYblocksNextJunction
+	(MSPACMAN (nextJunction ?j) (nearestGhostChasing ?g))
+	(BLINKY (edible false) (pacmanDistance ?d))
+	(test (and(!= ?g BLINKY) (<= ?d 30)))
+	=> 
+	(assert (ACTION (id BLINKYblocksNextJunction) (info "Cerca de pacman pero no perseguidor principal --> bloquear junction")  (priority 50) 
+		(junction ?j))
+	)
+)
+
+(defrule BLINKYprotect
+	(BLINKY (edible false) (nearGhostEdible ?n))
+	(test (!= ?n NONE))
+	=> 
+	(assert (ACTION (id BLINKYprotect) (info "Protejo a mi pana")  (priority 50) 
+		(ghost ?n))
+	)
+)
+
+(defrule BLINKYblockSection
+	(BLINKY (edible false) (pacmanDistance ?d))
+	(test (>= ?d 30))
+	=> 
+	(assert (ACTION (id BLINKYblockSection) (info "Bloqueo la sección")  (priority 60)))
+)
+
+(defrule BLINKYRunToSection
+	(BLINKY (edible true) (pacmanDistance ?d))
+	(test (>= ?d 30))
+	=> 
+	(assert (ACTION (id BLINKYRunToSection) (info "Huir hacia la sección")  (priority 60)))
+)
+

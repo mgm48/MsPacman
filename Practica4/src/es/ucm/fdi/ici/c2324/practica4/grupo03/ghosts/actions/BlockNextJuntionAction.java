@@ -1,0 +1,45 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.ghosts.actions;
+
+import es.ucm.fdi.ici.rules.RulesAction;
+import jess.Fact;
+import jess.JessException;
+import jess.Value;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class BlockNextJuntionAction implements RulesAction {
+	
+	GHOST ghost;
+	int juntion;
+	public BlockNextJuntionAction(GHOST ghost) {
+		this.ghost = ghost;
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		 if (game.doesGhostRequireAction(ghost))        //if it requires an action
+  		 return game.getApproximateNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost), juntion, game.getGhostLastMoveMade(ghost), DM.PATH);
+	return MOVE.NEUTRAL;
+	}
+
+	@Override
+	public String getActionId() {
+		return ghost + "blocks next junction";
+	}
+
+	@Override
+	public void parseFact(Fact actionFact) {
+		try {
+			Value value = actionFact.getSlotValue("juntion");
+			if(value == null)
+				return;
+			int strategyValue = value.intValue(null);
+			juntion= Integer.valueOf(strategyValue);
+		} catch (JessException e) {
+			e.printStackTrace();
+		}
+		
+	}
+}

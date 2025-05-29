@@ -1,0 +1,189 @@
+(defmodule PINKY-ACTIONS
+
+	(import SECTIONS ?ALL-SECTIONS ?SECTION-STATUS)
+
+	;FACTS ASSERTED BY GAME INPUT
+	(deftemplate BLINKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols INKY PINKY SUE NONE))
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols INKY PINKY SUE NONE))
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+	)
+		
+	(deftemplate INKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY PINKY SUE)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY PINKY SUE)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+	)
+		
+	(deftemplate PINKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY SUE)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY SUE)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+
+	)
+
+	(deftemplate SUE
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY PINKY)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY PINKY)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+
+	)
+		
+	(deftemplate MSPACMAN 
+		(slot closestPPill (type NUMBER))
+		(slot mindistancePPill (type NUMBER))
+		(slot nextJunction (type NUMBER))
+		(slot nearestGhostEdible (type SYMBOL) (allowed-symbols PINKY INKY PINKY SUE)) 
+		(slot nearestGhostChasing (type SYMBOL) (allowed-symbols PINKY INKY PINKY SUE))
+		
+	)
+		
+	;DEFINITION OF THE ACTION FACT
+	(deftemplate ACTION
+		(slot id) (slot info (default "")) (slot priority (type NUMBER) ) ; mandatory slots
+		(slot runawaystrategy (type SYMBOL)) ; Extra slot for the runaway action
+		(slot ghost (type SYMBOL)(allowed-symbols PINKY INKY PINKY SUE))
+		(slot powerpill (type NUMBER))
+		(slot junction (type NUMBER))
+	) 
+
+	;RULES 
+	(defrule PINKYrunsAwayMSPACMANclosePPill
+		(PINKY (edible false) (pacmanClosestPPillDistance ?dp))
+		(MSPACMAN (closestPPill ?p) (mindistancePPill ?d)) (>= ?dp ?d)) 
+		=>  
+		(assert 
+			(ACTION (id PINKYrunsAway) (info "MSPacMan cerca PPill") (priority 50) 
+			)
+		)
+	)
+
+	(defrule PINKYrunsAway
+		(PINKY (edible true)) 
+		=>  
+		(assert 
+			(ACTION (id PINKYrunsAway) (info "Comestible --> huir") (priority 30) 
+				(runawaystrategy CORNER)
+			)
+		)
+	)
+		
+	(defrule PINKYchases
+		(PINKY (edible false)) 
+		=> 
+		(assert (ACTION (id PINKYchases) (info "No comestible --> perseguir")  (priority 10) ))
+	)	
+		
+	(defrule PINKYrunsAwayEdibleGhosts	
+		(PINKY (edible true) (nearGhostEdible ?g) (nearGhostEdibleDistance ?d))
+		(test (< ?d 20))
+		=> 
+		(assert (ACTION (id PINKYrunsAwayEdibleGhosts) (info "Cerca de ghost comestible --> huir")  (priority 50) 
+		(ghost ?g))
+		)
+	)	
+
+	(defrule PINKYrunsToProtectingGhosts	
+		(PINKY (edible true) (nearGhostChasing ?g) (nearGhostEdibleDistance ?d) (securePath true))
+		(test (> ?d 20))
+		=> 
+		(assert (ACTION (id PINKYrunsToProtectingGhosts) (info "Camino seguro a ghost protecting --> me protegen")  (priority 50) 
+		(ghost ?g))
+		)
+	)	
+
+	(defrule PINKYblocksPowerPills	
+		(MSPACMAN (mindistancePPill ?d) (closestPPill ?p))
+		(PINKY (edible false) (pacmanClosestPPillDistance ?dp))
+		(test (< ?dp ?d))
+		=> 
+		(assert (ACTION (id PINKYblocksPowerPills) (info "Mas cerca de ppill que pacman --> proteger ppill")  (priority 50) 
+		(powerpill ?p))
+		)
+	)
+
+	(defrule PINKYblocksNextJunction
+		(MSPACMAN (nextJunction ?j) (nearestGhostChasing ?g)
+		(PINKY (edible false) (pacmanDistance ?d))
+		(test (!= ?g PINKY)(<= ?d 30)
+		=> 
+		(assert (ACTION (id  PINKYblocksNextJunction) (info "Cerca de pacman pero no perseguidor principal --> bloquear junction")  (priority 50) 
+		(junction ?j))
+		)
+	)
+
+	(defrule PINKYprotect
+		(PINKY (edible false) (nearGhostEdible ?n))
+		(test (!= ?n NONE)
+		=> 
+		(assert (ACTION (id  PINKYprotect) (info "Protejo a mi pana")  (priority 50) 
+		(nearGhostEdible ?n))
+		)
+	)
+
+	(defrule PINKYblockSection
+		(PINKY (edible false) (pacmanDistance ?d))
+		(test (>= ?d 30)
+		=> 
+		(assert (ACTION (id  PINKYblockSection) (info "Bloqueo la seccion")  (priority 60) 
+		)
+	)
+
+	(defrule PINKYRunToSection
+		(PINKY (edible true) (pacmanDistance ?d))
+		(test (>= ?d 30)
+		=> 
+		(assert (ACTION (id  PINKYRunToSection) (info "Huir hacia la seccion")  (priority 60) 
+		)
+	)
+
+	(defrule PINKYUpdateSection
+		?s <- (?ALL-SECTIONS (section ?section))
+		(PINKY (section ?currentSection))
+		(or
+			(and (test (neq ?currentSection "NONE"))
+				(test (neq ?currentSection ?section))
+				=>
+				(modify ?s (?SECTION-STATUS (section ?currentSection) (status valid) (occupied busy)))
+			)
+			(and (test (eq ?currentSection "NONE"))
+				(not (SECTION-STATUS (section ?section) (occupied busy)))
+				=>
+				(bind ?newSection (first $?section))
+				(modify ?s (?SECTION-STATUS (section ?newSection) (status valid) (occupied busy)))
+			)
+			(and (test (eq ?currentSection "NONE"))
+				=>
+				(modify ?s (?SECTION-STATUS (section "NONE") (status valid) (occupied none)))
+			)
+		)
+	)
+
+	(defrule PINKYSectionActions
+		?s <- (?ALL-SECTIONS (section ?section))
+		(PINKY (section ?section&~"NONE"))
+		(PINKYRunToSection)
+		=>
+		(assert (ACTION (id PINKYSectionActions) (section ?section)))
+	)
+)

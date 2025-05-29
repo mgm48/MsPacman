@@ -1,0 +1,34 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions;
+
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.Utils;
+import es.ucm.fdi.ici.rules.RulesAction;
+import jess.Fact;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class ChaseClosestEdibleAction implements RulesAction {
+	private GHOST nearestEdible;
+	
+	@Override
+	public String getActionId() {
+		return "pacman persigue " + nearestEdible;
+	}
+	
+	@Override
+	public MOVE execute(Game game) {
+		this.nearestEdible = Utils.closestEdibleGhost(game);
+		if(nearestEdible != null) {
+			return game.getApproximateNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), 
+					game.getGhostCurrentNodeIndex(nearestEdible), game.getPacmanLastMoveMade(), DM.PATH);
+		}
+		return MOVE.NEUTRAL;
+	}
+
+	@Override
+	public void parseFact(Fact actionFact) {
+		// TODO Auto-generated method stub
+		
+	}
+}

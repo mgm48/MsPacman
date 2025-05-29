@@ -1,0 +1,89 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.pacman;
+
+import java.util.Collection;
+import java.util.Arrays;
+import java.util.EnumMap;
+
+import es.ucm.fdi.ici.rules.RulesInput;
+import pacman.game.Game;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+
+
+
+public class PacmanInput extends RulesInput {
+	private String nearGhostEdible;
+	private String nearGhostChasing;
+	private double nearGhostEdibleDistance;
+	private double nearGhostChasingDistance;
+	private boolean pacmandead;
+	private double mindistancePPill;
+	private int closestPP;
+	private double mindistancePill;
+	private int closestpill;
+	private boolean securePathToEdibleGhost;
+	private boolean securePathToPP;
+	private boolean securePathToPill;
+
+	private MOVE lastmove;
+	private int  pc;
+	private EnumMap<GHOST,Integer> gs;	
+
+
+	public PacmanInput(Game game) {
+		super(game);
+	}
+
+	@Override
+	public Collection<String> getFacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void parseInput() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	//Calcula el ghost que persigue a pacman mas cercano dentro de un limite
+     public GHOST closestChasingGhost() {
+    	GHOST res = null;
+    	int d = Integer.MAX_VALUE;
+    	int pc = game.getPacmanCurrentNodeIndex();
+    	
+    	for (GHOST g : GHOST.values()) {
+    		int gn = game.getGhostCurrentNodeIndex(g);
+    		if (!game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {
+    			int aux = game.getShortestPathDistance(gn,pc);
+    			if (aux < d) {
+        			d = aux;
+        			res = g;
+        		}
+    		}	
+    	}
+    	return res;
+    }
+    
+    
+    // Calcula el ghost comible ms cercano a pacman dentro de un limite
+    public GHOST closestEdibleGhost() {
+    	GHOST res = null;
+    	int d = Integer.MAX_VALUE;
+    	int pc = game.getPacmanCurrentNodeIndex();
+    	MOVE lastmove = game.getPacmanLastMoveMade();
+    	
+    	for (GHOST g : GHOST.values()) {
+    		int gn = game.getGhostCurrentNodeIndex(g);
+    		if (game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {
+    			int aux = game.getShortestPathDistance(pc, gn, lastmove);
+    			if (aux < d) {
+        			d = aux;
+        			res = g;
+        		}
+    		}
+    	}
+    	return res;
+    }
+}

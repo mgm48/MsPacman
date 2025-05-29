@@ -1,0 +1,18 @@
+(defmodule SECTIONS
+
+  (export ?ALL-SECTIONS ?SECTION-STATUS)
+  
+  (deftemplate SECTION-STATUS
+    (slot section)
+    (slot status)
+    (slot occupied)
+  )
+  
+  (deffacts ?ALL-SECTIONS
+    (SECTION-STATUS (section section1) (status valid) (occupied none))
+    (SECTION-STATUS (section section2) (status valid) (occupied none))
+    (SECTION-STATUS (section section3) (status valid) (occupied none))
+    (SECTION-STATUS (section section4) (status valid) (occupied none))
+  )
+)
+

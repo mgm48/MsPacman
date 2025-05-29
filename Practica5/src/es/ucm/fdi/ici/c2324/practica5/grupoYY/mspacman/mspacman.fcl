@@ -1,0 +1,192 @@
+FUNCTION_BLOCK FuzzyMsPacMan	// Block definition (there may be more than one block per file)
+
+VAR_INPUT				// Define input variables
+	BLINKYdistance : REAL;
+	PINKYdistance : REAL;
+	INKYdistance : REAL;
+	SUEdistance : REAL;
+	BLINKYconfidence : REAL;
+	PINKYconfidence : REAL;
+	INKYconfidence : REAL;
+	SUEconfidence : REAL;
+	Pilldistance : REAL;
+	PPilldistance : REAL;
+	BLINKYedible : REAL;
+	PINKYedible : REAL;
+	INKYedible : REAL;
+	SUEedible : REAL;
+END_VAR
+
+VAR_OUTPUT				// Define output variable
+	Runaway : REAL;
+	GoToPPill: REAL;
+	EatPills: REAl;
+	Chase: REAL;
+END_VAR
+
+FUZZIFY BLINKYdistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+FUZZIFY PINKYdistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+FUZZIFY INKYdistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+FUZZIFY SUEdistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+
+FUZZIFY BLINKYconfidence			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM low := (0,1)(25,1)(50,0) ; 
+	TERM medium := gauss 50 25;
+	TERM high := (50,0)(75,1)(100,1);
+END_FUZZIFY
+FUZZIFY INKYconfidence			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM low := (0,1)(25,1)(50,0) ; 
+	TERM medium := gauss 50 25;
+	TERM high := (50,0)(75,1)(100,1);
+END_FUZZIFY
+FUZZIFY PINKYconfidence			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM low := (0,1)(25,1)(50,0) ; 
+	TERM medium := gauss 50 25;
+	TERM high := (50,0)(75,1)(100,1);
+END_FUZZIFY
+FUZZIFY SUEconfidence			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM low := (0,1)(25,1)(50,0) ; 
+	TERM medium := gauss 50 25;
+	TERM high := (50,0)(75,1)(100,1);
+END_FUZZIFY
+
+FUZZIFY Pilldistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+FUZZIFY PPilldistance			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM near := (0, 1) (60, 0) ; 
+	TERM medium := gauss 75 25;
+	TERM far := (90, 0) (150, 1) (200, 1);
+END_FUZZIFY
+
+FUZZIFY BLINKYedible			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM nonedible := (0,1)(1,0);
+	TERM low := (1,0)(20,1)(30,1)(50,0); 
+	TERM medium := gauss 65 25;
+	TERM high := (75,0)(150,1)(200,1);
+END_FUZZIFY
+FUZZIFY INKYedible			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM nonedible := (0,1)(1,0);
+	TERM low := (1,0)(20,1)(30,1)(50,0); 
+	TERM medium := gauss 65 25;
+	TERM high := (75,0)(150,1)(200,1);
+END_FUZZIFY
+FUZZIFY PINKYedible			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM nonedible := (0,1)(1,0);
+	TERM low := (1,0)(20,1)(30,1)(50,0); 
+	TERM medium := gauss 65 25;
+	TERM high := (75,0)(150,1)(200,1);
+END_FUZZIFY
+FUZZIFY SUEedible			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
+	TERM nonedible := (0,1)(1,0);
+	TERM low := (1,0)(20,1)(30,1)(50,0); 
+	TERM medium := gauss 65 25;
+	TERM high := (75,0)(150,1)(200,1);
+END_FUZZIFY
+
+DEFUZZIFY Runaway			// Defzzzify output variable 'tip' : {'cheap', 'average', 'generous' }
+	TERM calm := (0,1) (5,1) (15,0);
+	TERM nervious := gauss 15 5;
+	TERM emergency := (15,0) (25,1) (30,1);
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+DEFUZZIFY GoToPPill			// Defzzzify output variable 'tip' : {'cheap', 'average', 'generous' }
+	TERM calm := (0,1) (5,1) (15,0);
+	TERM nervious := gauss 15 5;
+	TERM emergency := (15,0) (25,1) (30,1);
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+DEFUZZIFY EatPills			// Defzzzify output variable 'tip' : {'cheap', 'average', 'generous' }
+	TERM calm := (0,1) (5,1) (15,0);
+	TERM nervious := gauss 15 5;
+	TERM emergency := (15,0) (25,1) (30,1);
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+DEFUZZIFY Chase			// Defzzzify output variable 'tip' : {'cheap', 'average', 'generous' }
+	TERM calm := (0,1) (5,1) (15,0);
+	TERM nervious := gauss 15 5;
+	TERM emergency := (15,0) (25,1) (30,1);
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+
+RULEBLOCK MsPacManRules
+	AND : MIN;			// Use 'min' for 'and' (also implicit use 'max' for 'or' to fulfill DeMorgan's Law)
+	ACT : MIN;			// Use 'min' activation method
+	ACCU : MAX;			// Use 'MAX' accumulation method (Other options PROBOR and SUM)
+
+	RULE 1 : IF BLINKYdistance IS near AND BLINKYconfidence IS high AND BLINKYedible IS nonedible THEN Runaway IS emergency;
+	RULE 2 : IF PINKYdistance IS near AND PINKYconfidence IS high AND PINKYedible IS nonedible THEN Runaway IS emergency;
+	RULE 3 : IF INKYdistance IS near AND INKYconfidence IS high AND INKYedible IS nonedible THEN Runaway IS emergency;
+	RULE 4 : IF SUEdistance IS near AND SUEconfidence IS high AND SUEedible IS nonedible THEN Runaway IS emergency;
+	RULE 5 : IF BLINKYconfidence IS medium THEN EatPills IS nervious;
+	RULE 6 : IF PINKYconfidence IS medium THEN EatPills IS nervious;
+	RULE 7 : IF INKYconfidence IS medium THEN EatPills IS nervious;
+	RULE 8 : IF SUEconfidence IS medium THEN EatPills IS nervious;
+	RULE 9 : IF BLINKYdistance IS far THEN Runaway IS calm;
+	RULE 10 : IF PINKYdistance IS far THEN Runaway IS calm;
+	RULE 11 : IF INKYdistance IS far THEN Runaway IS calm;
+	RULE 12 : IF SUEdistance IS far THEN Runaway IS calm;
+	//las creadas por nosotros
+	//es ir a comer una powerpill si hay un fantasma cerca y una powerpill cerca
+	RULE 13 : IF BLINKYdistance IS near AND BLINKYconfidence IS high AND PPilldistance IS near AND BLINKYedible IS nonedible THEN GoToPPill IS emergency;
+	RULE 14 : IF PINKYdistance IS near AND PINKYconfidence IS high AND PPilldistance IS near AND PINKYedible IS nonedible THEN GoToPPill IS emergency;
+	RULE 15 : IF INKYdistance IS near AND INKYconfidence IS high AND PPilldistance IS near AND INKYedible IS nonedible THEN GoToPPill IS emergency;
+	RULE 16 : IF SUEdistance IS near AND SUEconfidence IS high AND PPilldistance IS near  AND SUEedible IS nonedible THEN GoToPPill IS emergency;
+	RULE 17 : IF BLINKYdistance IS medium AND BLINKYconfidence IS medium AND PPilldistance IS near AND BLINKYedible IS nonedible THEN GoToPPill IS nervious;
+	RULE 18 : IF PINKYdistance IS medium AND PINKYconfidence IS medium AND PPilldistance IS near AND PINKYedible IS nonedible THEN GoToPPill IS nervious;
+	RULE 19 : IF INKYdistance IS medium AND INKYconfidence IS medium AND PPilldistance IS near AND INKYedible IS nonedible THEN GoToPPill IS nervious;
+	RULE 20 : IF SUEdistance IS medium AND SUEconfidence IS medium AND PPilldistance IS near AND SUEedible IS nonedible THEN GoToPPill IS nervious;
+	//si no hay fantasmas comer pills
+	RULE 21 : IF BLINKYdistance IS far AND PINKYdistance IS far AND INKYdistance IS far AND SUEdistance IS far THEN EatPills IS nervious;
+	RULE 22 : IF BLINKYdistance IS medium AND PINKYdistance IS medium AND INKYdistance IS medium AND SUEdistance IS medium AND BLINKYconfidence IS high AND PINKYconfidence IS high AND INKYconfidence IS high AND SUEconfidence IS high THEN EatPills IS nervious;
+	//Perseguir fantasmas 
+	RULE 23 : IF BLINKYdistance IS near AND BLINKYedible IS low THEN Chase IS emergency;
+	RULE 24 : IF PINKYdistance IS near AND PINKYedible IS low THEN Chase IS emergency;
+	RULE 25 : IF INKYdistance IS near AND INKYedible IS low THEN Chase IS emergency;
+	RULE 26 : IF SUEdistance IS near AND SUEedible IS low THEN Chase IS emergency;
+	RULE 27 : IF BLINKYdistance IS medium AND BLINKYedible IS medium THEN Chase IS emergency;
+	RULE 28 : IF PINKYdistance IS medium AND PINKYedible IS medium THEN Chase IS emergency;
+	RULE 29 : IF INKYdistance IS medium AND INKYedible IS medium THEN Chase IS emergency;
+	RULE 30 : IF SUEdistance IS medium AND SUEedible IS medium THEN Chase IS emergency;
+	RULE 31 : IF BLINKYdistance IS far AND BLINKYedible IS high THEN Chase IS nervious;
+	RULE 32 : IF PINKYdistance IS far AND PINKYedible IS high THEN Chase IS nervious;
+	RULE 33 : IF INKYdistance IS far AND INKYedible IS high THEN Chase IS nervious;
+	RULE 34 : IF SUEdistance IS far AND SUEedible IS high THEN Chase IS nervious;
+	RULE 35 : IF BLINKYdistance IS far AND BLINKYedible IS medium THEN Chase IS nervious;
+	RULE 36 : IF PINKYdistance IS far AND PINKYedible IS medium THEN Chase IS nervious;
+	RULE 37 : IF INKYdistance IS far AND INKYedible IS medium THEN Chase IS nervious;
+	RULE 38 : IF SUEdistance IS far AND SUEedible IS medium THEN Chase IS nervious;
+	RULE 39 : IF BLINKYdistance IS far AND BLINKYedible IS low THEN Chase IS calm;
+	RULE 40 : IF PINKYdistance IS far AND PINKYedible IS low THEN Chase IS calm;
+	RULE 41 : IF INKYdistance IS far AND INKYedible IS low THEN Chase IS calm;
+	RULE 42 : IF SUEdistance IS far AND SUEedible IS low THEN Chase IS calm;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+

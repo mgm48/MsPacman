@@ -1,0 +1,377 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.ghosts;
+
+import java.util.Collection;
+import java.util.Vector;
+
+import es.ucm.fdi.ici.rules.RulesInput;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Game;
+
+public class GhostsInput extends RulesInput {
+	//si son comestibles
+	private boolean BLINKYedible;
+	private boolean INKYedible;
+	private boolean PINKYedible;
+	private boolean SUEedible;
+	//que fantasma cerca es comestible
+	private String BLINKYnearGhostEdible;
+	private String INKYnearGhostEdible;
+	private String PINKYnearGhostEdible;
+	private String SUEnearGhostEdible;
+	//la distancia a los fantasmas comestibles
+	private double BLINKYnearGhostEdibleDistance;
+	private double INKYnearGhostEdibleDistance;
+	private double PINKYnearGhostEdibleDistance;
+	private double SUEnearGhostEdibleDistance;
+	//El fantasma que tienes mas cerca
+	private String BLINKYnearGhostChasing;
+	private String INKYnearGhostChasing;
+	private String PINKYnearGhostChasing;
+	private String SUEnearGhostChasing;
+	//La distancia del fantasma que tienes mas cerca
+	private double BLINKYnearGhostChasingDistance;
+	private double INKYnearGhostChasingDistance;
+	private double PINKYnearGhostChasingDistance;
+	private double SUEnearGhostChasingDistance;
+	//camino seguro
+	private boolean BLINKYSecurePath;
+	private boolean INKYSecurePath;
+	private boolean PINKYSecurePath;
+	private boolean SUESecurePath;
+	//distancia a Pacman
+	private double BLINKYPacmanDistance;
+	private double INKYPacmanDistance;
+	private double PINKYPacmanDistance;
+	private double SUEPacmanDistance;
+	//distancia a la powerpill mas cercana a pacman
+	private double BLINKYpacmanClosestPPillDistance;
+	private double INKYpacmanClosestPPillDistance;
+	private double PINKYpacmanClosestPPillDistance;
+	private double SUEpacmanClosestPPillDistance;
+	//datos de pacman
+	private int PacmanClosestPPill;
+	private double mindistancePPill;
+	private int PacmanNextJuntion;
+	private String PacmanNearestGhostEdible;
+	private String PacmanNearestGhostChasing;
+	
+	public GhostsInput(Game game) {
+		super(game);
+	}
+	
+	
+	private double calcularChasingGhost(GHOST ghosttype,String cambioValor){
+
+		double distance, distancemin = Double.MAX_VALUE;
+
+		for(GHOST g: GHOST.values()) {
+			
+			if(g != ghosttype && game.getGhostLairTime(g)<=0) {
+				
+				distance = game.getDistance(game.getGhostCurrentNodeIndex(g),game.getGhostCurrentNodeIndex(ghosttype), game.getGhostLastMoveMade(g),DM.PATH);
+				if(distancemin > distance)
+					cambioValor = g.toString();
+				distancemin = Math.min(distancemin, distance);
+			}				
+		}	
+			
+		return distancemin;
+	}
+	private void datosPacman() {
+		int pacman = game.getPacmanCurrentNodeIndex();
+		//calcular la PP mas cercana y su distancia
+		for(int ppill: game.getActivePowerPillsIndices()) {
+			double distance = game.getDistance(pacman, ppill, DM.PATH);
+			if(distance<this.PacmanClosestPPill) PacmanClosestPPill=ppill;
+			this.mindistancePPill = Math.min(distance, this.PacmanClosestPPill);
+		}
+		//calcular next junction
+		int[] cruces = game.getJunctionIndices();
+  		double d = Double.MAX_VALUE;
+		for(int i = 0; i < cruces.length; i++){
+  			if(game.getDistance(cruces[i], game.getPacmanCurrentNodeIndex(), DM.PATH) <= d) {
+  				d = game.getDistance(cruces[i], game.getPacmanCurrentNodeIndex(), DM.PATH);
+  				PacmanNextJuntion=cruces[i];
+  			}
+  		}
+		  
+		//calcular el fantasma edible mas cercano
+		GHOST resE = null;
+		double distanceE = Double.MAX_VALUE;
+		double aux;  
+		for(GHOST g : GHOST.values()) {
+			if (game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {{
+				aux = game.getDistance(pacman,game.getGhostCurrentNodeIndex(g), game.getPacmanLastMoveMade(),DM.PATH);
+				if (aux < distanceE) {
+        			distanceE = aux;
+        			resE = g;
+        		}
+			}				
+		}
+		this.PacmanNearestGhostEdible = ghostToString(resE);
+		
+		//calcular el fantasma chasing mas cerca
+		GHOST resC = null;
+		double distanceC = Double.MAX_VALUE; 
+		for(GHOST g : GHOST.values()) {
+			if(game.getGhostLairTime(g)<=0) {
+				aux = game.getDistance(pacman,game.getGhostCurrentNodeIndex(g), game.getPacmanLastMoveMade(),DM.PATH);
+				if (aux < distanceC) {
+        			distanceC = aux;
+        			resC = g;
+        		}
+			}				
+		}
+		this.PacmanNearestGhostChasing = ghostToString(resC);
+		
+	}
+	@Override
+	public void parseInput() {
+		int pacman = game.getPacmanCurrentNodeIndex();
+		datosPacman();
+		// conseguir los edibles
+		this.BLINKYedible = game.isGhostEdible(GHOST.BLINKY);
+		this.INKYedible = game.isGhostEdible(GHOST.INKY);
+		this.PINKYedible = game.isGhostEdible(GHOST.PINKY);
+		this.SUEedible = game.isGhostEdible(GHOST.SUE);
+		
+		GHOST aux;
+		//los datos de edible
+		aux = calcularEdibleGhost(GHOST.BLINKY);
+		if(aux != null)
+			this.BLINKYnearGhostEdibleDistance = game.getShortestPathDistance(game.getGhostCurrentNodeIndex(GHOST.BLINKY), aux);
+		
+		
+
+		BLINKYnearGhostEdibleDistance=calcularEdibleGhost(GHOST.BLINKY);
+		INKYnearGhostEdibleDistance=calcularEdibleGhost(GHOST.INKY);
+		PINKYnearGhostEdibleDistance=calcularEdibleGhost(GHOST.PINKY);
+		SUEnearGhostEdibleDistance=calcularEdibleGhost(GHOST.SUE);
+		
+		//los datos de chasing
+		if(game.getGhostLairTime(GHOST.BLINKY)==0)
+		BLINKYnearGhostChasingDistance=calcularChasingGhost(GHOST.BLINKY,BLINKYnearGhostChasing);
+		if(game.getGhostLairTime(GHOST.INKY)==0)
+		INKYnearGhostChasingDistance=calcularChasingGhost(GHOST.INKY,INKYnearGhostChasing);
+		if(game.getGhostLairTime(GHOST.PINKY)==0)
+		PINKYnearGhostChasingDistance=calcularChasingGhost(GHOST.PINKY,PINKYnearGhostChasing);
+		if(game.getGhostLairTime(GHOST.SUE)==0)
+		SUEnearGhostChasingDistance=calcularChasingGhost(GHOST.SUE,SUEnearGhostChasing);
+		// los secures path
+		
+		
+		//distancia a pacman
+		if(game.getGhostLairTime(GHOST.BLINKY)==0)
+		BLINKYPacmanDistance=game.getDistance(game.getGhostCurrentNodeIndex(GHOST.BLINKY),pacman ,game.getGhostLastMoveMade(GHOST.BLINKY), DM.PATH);
+		if(game.getGhostLairTime(GHOST.BLINKY)==0)
+		INKYPacmanDistance=game.getDistance(game.getGhostCurrentNodeIndex(GHOST.INKY),pacman ,game.getGhostLastMoveMade(GHOST.INKY), DM.PATH);
+		if(game.getGhostLairTime(GHOST.BLINKY)==0)
+		PINKYPacmanDistance=game.getDistance(game.getGhostCurrentNodeIndex(GHOST.PINKY),pacman ,game.getGhostLastMoveMade(GHOST.PINKY), DM.PATH);
+		if(game.getGhostLairTime(GHOST.BLINKY)==0)
+		SUEPacmanDistance=game.getDistance(game.getGhostCurrentNodeIndex(GHOST.SUE),pacman ,game.getGhostLastMoveMade(GHOST.SUE), DM.PATH);
+		//distancia a la PP mas cercana a Pacman
+		BLINKYpacmanClosestPPillDistance = game.getDistance(game.getGhostCurrentNodeIndex(GHOST.BLINKY),PacmanClosestPPill ,game.getGhostLastMoveMade(GHOST.BLINKY), DM.PATH);
+		this.minPacmanDistancePPill = Double.MAX_VALUE;
+		this.minGhostDistancePPill = Double.MAX_VALUE;
+		int pill=-1;
+		
+			
+		
+		for(GHOST ghosttype: GHOST.values()) {
+
+			double distance = game.getDistance(game.getGhostCurrentNodeIndex(ghosttype), pill, DM.PATH);
+			this.minGhostDistancePPill = Math.min(distance, this.minGhostDistancePPill);
+			
+		}	
+		
+		
+		if(BLINKYnearGhostEdible != null)
+			//private GHOST BLINKYnearGhost;
+			this.BLINKYnearGhostEdibleDistance = closestGhost(GHOST.BLINKY, BLINKYnearGhostEdible);
+		if(INKYnearGhostEdible != null)
+			this.INKYnearGhostEdibleDistance = closestGhost(GHOST.INKY, INKYnearGhostEdible);
+		if(PINKYnearGhostEdible != null)
+			this.PINKYnearGhostEdibleDistance = closestGhost(GHOST.PINKY, PINKYnearGhostEdible);
+		if(SUEnearGhostEdible != null)
+			this.SUEnearGhostEdibleDistance = closestGhost(GHOST.SUE, SUEnearGhostEdible);
+		
+	
+		if(game.getGhostLairTime(GHOST.BLINKY)<=0)
+			this.BLINKYnearGhostChasing = closestGhostDir(GHOST.BLINKY);
+		if(game.getGhostLairTime(GHOST.INKY)<=0)
+			this.INKYnearGhostChasing = closestGhostDir(GHOST.INKY);
+		if(game.getGhostLairTime(GHOST.PINKY)<=0)
+			this.PINKYnearGhostChasing = closestGhostDir(GHOST.PINKY);
+		if(game.getGhostLairTime(GHOST.SUE)<=0)
+			this.SUEnearGhostChasing = closestGhostDir(GHOST.SUE);
+
+		this.BLINKYPacmanDistance = game.getDistance(game.getGhostCurrentNodeIndex(GHOST.BLINKY), pacman, game.getGhostLastMoveMade(GHOST.BLINKY), DM.PATH);
+		this.INKYPacmanDistance = game.getDistance(game.getGhostCurrentNodeIndex(GHOST.INKY), pacman, game.getGhostLastMoveMade(GHOST.INKY), DM.PATH);
+		this.PINKYPacmanDistance = game.getDistance(game.getGhostCurrentNodeIndex(GHOST.PINKY), pacman, game.getGhostLastMoveMade(GHOST.PINKY), DM.PATH);
+		this.SUEPacmanDistance = game.getDistance(game.getGhostCurrentNodeIndex(GHOST.SUE), pacman, game.getGhostLastMoveMade(GHOST.SUE), DM.PATH);
+		
+		//System.out.println(BLINKYPacmandistance);
+		
+		if(convertStringToGHOST(BLINKYnearGhostChasing) != null && game.getGhostLairTime(convertStringToGHOST(BLINKYnearGhostChasing))<=0 && game.getGhostLairTime(GHOST.BLINKY)<=0)
+			this.BLINKYSecurePath = (game.getDistance(pacman, game.getGhostCurrentNodeIndex(GHOST.BLINKY), game.getPacmanLastMoveMade(), DM.PATH) > game.getDistance(game.getGhostCurrentNodeIndex(convertStringToGHOST(BLINKYnearGhostChasing)), game.getGhostCurrentNodeIndex(GHOST.BLINKY), game.getGhostLastMoveMade(BLINKYnearComingGhost), DM.PATH));
+		if(convertStringToGHOST(INKYnearGhostChasing) != null  && game.getGhostLairTime(convertStringToGHOST(INKYnearGhostChasing))<=0 && game.getGhostLairTime(GHOST.INKY)<=0)
+			this.INKYSecurePath = (game.getDistance(pacman, game.getGhostCurrentNodeIndex(GHOST.INKY), game.getPacmanLastMoveMade(), DM.PATH) > game.getDistance(game.getGhostCurrentNodeIndex(convertStringToGHOST(INKYnearGhostChasing)), game.getGhostCurrentNodeIndex(GHOST.BLINKY), game.getGhostLastMoveMade(INKYnearComingGhost), DM.PATH));
+		if(convertStringToGHOST(PINKYnearGhostChasing) != null  && game.getGhostLairTime(convertStringToGHOST(PINKYnearGhostChasing))<=0 && game.getGhostLairTime(GHOST.PINKY)<=0)
+			this.PINKYSecurePath = (game.getDistance(pacman, game.getGhostCurrentNodeIndex(GHOST.PINKY), game.getPacmanLastMoveMade(), DM.PATH) > game.getDistance(game.getGhostCurrentNodeIndex(convertStringToGHOST(INKYnearGhostChasing)), game.getGhostCurrentNodeIndex(GHOST.BLINKY), game.getGhostLastMoveMade(PINKYnearComingGhost), DM.PATH));
+		if(convertStringToGHOST(SUEnearGhostChasing) != null  && game.getGhostLairTime(convertStringToGHOST(SUEnearGhostChasing))<=0 && game.getGhostLairTime(GHOST.SUE)<=0)
+		this.SUESecurePath = (game.getDistance(pacman, game.getGhostCurrentNodeIndex(GHOST.SUE), game.getPacmanLastMoveMade(), DM.PATH) > game.getDistance(game.getGhostCurrentNodeIndex(convertStringToGHOST(SUEnearGhostChasing)), game.getGhostCurrentNodeIndex(GHOST.BLINKY), game.getGhostLastMoveMade(SUEnearComingGhost), DM.PATH));
+
+	}
+
+
+	@Override
+	public Collection<String> getFacts() {
+		Vector<String> facts = new Vector<String>();
+		//Edible facts
+		facts.add(String.format("(BLINKY (edible %s))", this.BLINKYedible));
+		facts.add(String.format("(INKY (edible %s))", this.INKYedible));
+		facts.add(String.format("(PINKY (edible %s))", this.PINKYedible));
+		facts.add(String.format("(SUE (edible %s))", this.SUEedible));
+		
+		facts.add(String.format("(BLINKY (nearGhostEdible %s))", this.BLINKYnearGhostEdible));
+		facts.add(String.format("(INKY (nearGhostEdible %s))", this.INKYnearGhostEdible));
+		facts.add(String.format("(PINKY (nearGhostEdible %s))", this.PINKYnearGhostEdible));
+		facts.add(String.format("(SUE (nearGhostEdible %s))", this.SUEnearGhostEdible));
+
+		facts.add(String.format("(BLINKY (nearGhostChasing %s))", this.BLINKYnearGhostChasing));
+		facts.add(String.format("(INKY (nearGhostChasing %s))", this.INKYnearGhostChasing));
+		facts.add(String.format("(PINKY (nearGhostChasing %s))", this.PINKYnearGhostChasing));
+		facts.add(String.format("(SUE (nearGhostChasing %s))", this.SUEnearGhostChasing));
+
+		facts.add(String.format("(BLINKY (nearGhostEdibleDistance %d))", (int) this.BLINKYnearGhostEdibleDistance));
+		facts.add(String.format("(INKY (nearGhostEdibleDistance %d))", (int) this.INKYnearGhostEdibleDistance));
+		facts.add(String.format("(PINKY (nearGhostEdibleDistance %d))", (int) this.PINKYnearGhostEdibleDistance));
+		facts.add(String.format("(SUE (nearGhostEdibleDistance %d))", (int) this.SUEnearGhostEdibleDistance));
+
+		facts.add(String.format("(BLINKY (nearGhostChasingDistance %d))", (int) this.BLINKYnearGhostChasingDistance));
+		facts.add(String.format("(INKY (nearGhostChasingDistance %d))", (int) this.INKYnearGhostChasingDistance));
+		facts.add(String.format("(PINKY (nearGhostChasingDistance %d))", (int) this.PINKYnearGhostChasingDistance));
+		facts.add(String.format("(SUE (nearGhostChasingDistance %d))", (int) this.SUEnearGhostChasingDistance));
+
+		facts.add(String.format("(BLINKY (securePath %s))", this.BLINKYSecurePath));
+		facts.add(String.format("(INKY (securePath %s))", this.INKYSecurePath));
+		facts.add(String.format("(PINKY (securePath %s))", this.PINKYSecurePath));
+		facts.add(String.format("(SUE (securePath %s))", this.SUESecurePath));
+
+		facts.add(String.format("(BLINKY (pacmanDistance %d))", (int) this.BLINKYPacmanDistance));
+		facts.add(String.format("(INKY (pacmanDistance %d))", (int) this.INKYPacmanDistance));
+		facts.add(String.format("(PINKY (pacmanDistance %d))", (int) this.PINKYPacmanDistance));
+		facts.add(String.format("(SUE (pacmanDistance %d))", (int) this.SUEPacmanDistance));
+
+		
+		facts.add(String.format("(BLINKY (pacmanClosestPPillDistance %d))", (int) this.BLINKYpacmanClosestPPillDistance));
+		facts.add(String.format("(INKY (pacmanClosestPPillDistance %d))", (int) this.INKYpacmanClosestPPillDistance));
+		facts.add(String.format("(PINKY (pacmanClosestPPillDistance %d))", (int) this.PINKYpacmanClosestPPillDistance));
+		facts.add(String.format("(SUE (pacmanClosestPPillDistance %d))", (int) this.SUEpacmanClosestPPillDistance));
+
+		facts.add(String.format("(MSPACMAN (mindistancePPill %d))", (int)this.mindistancePPill));
+		facts.add(String.format("(MSPACMAN (closestPPill %d))", this.PacmanClosestPPill));
+		facts.add(String.format("(MSPACMAN (nextJunction %d))", this.PacmanNextJuntion));
+		facts.add(String.format("(MSPACMAN (nearestGhostEdible %d))", this.PacmanNearestGhostEdible));
+		facts.add(String.format("(MSPACMAN (nearestGhostChasing %d))", this.PacmanNearestGhostChasing));
+		return facts;
+	}
+
+
+
+
+	private String closestGhostDir(GHOST ghosttype){
+
+		double distance, distancemin = Double.MAX_VALUE;
+		String ghostnear = null;
+
+		for(GHOST g: GHOST.values()) {
+			
+			if(g != ghosttype && game.getGhostLairTime(g)<=0) {
+				
+				distance = game.getDistance(game.getGhostCurrentNodeIndex(g),game.getGhostCurrentNodeIndex(ghosttype), game.getGhostLastMoveMade(g),DM.PATH);
+				if(distancemin > distance)
+					ghostnear = g.toString();
+				distancemin = Math.min(distancemin, distance);
+			}				
+		}	
+			
+		return ghostnear;
+	}
+	
+	private double closestGhost(GHOST ghosttype, String ghostnear){
+		
+		double distance, distancemin = Double.MAX_VALUE;
+		
+		for(GHOST g: GHOST.values()) {
+			
+			if(g!= ghosttype && game.getGhostLairTime(g)<=0) {
+				
+				distance = game.getDistance(game.getGhostCurrentNodeIndex(ghosttype),game.getGhostCurrentNodeIndex(g), game.getGhostLastMoveMade(ghosttype),DM.PATH);
+				if(distancemin > distance)
+					ghostnear = g.toString();
+				distancemin = Math.min(distancemin, distance);
+			}				
+		}		
+		return distancemin;
+	}
+
+	private GHOST calcularEdibleGhost(GHOST ghosttype) {
+		GHOST res = null;
+		double distance = Double.MAX_VALUE;
+		double aux;  
+		for(GHOST g : GHOST.values()) {
+			if (game.isGhostEdible(g) && game.getGhostLairTime(g) <= 0) {
+				aux = game.getDistance(game.getGhostCurrentNodeIndex(ghosttype),game.getGhostCurrentNodeIndex(g), game.getGhostLastMoveMade(ghosttype),DM.PATH);
+				if (aux < distance) {
+        			distance = aux;
+        			res = g;
+        		}
+			}				
+		}
+		return res;
+	}
+
+	private GHOST calcularChasingGhost(GHOST ghosttype) {
+		GHOST res = null;
+		double distance = Double.MAX_VALUE;
+		double aux;  
+		for(GHOST g : GHOST.values()) {
+			if (game.getGhostLairTime(g) <= 0) {
+				aux = game.getDistance(game.getGhostCurrentNodeIndex(ghosttype),game.getGhostCurrentNodeIndex(g), game.getGhostLastMoveMade(ghosttype),DM.PATH);
+				if (aux < distance) {
+        			distance = aux;
+        			res = g;
+        		}
+			}				
+		}
+		return res;
+	}
+
+
+	public GHOST convertStringToGHOST(String ghostTypeName) {
+		for (GHOST ghost : GHOST.values()) {
+			if (ghost.className.equals(ghostTypeName)) {
+				return ghost;
+			}
+		}
+		throw new IllegalArgumentException("Tipo de GHOST no válido: " + ghostTypeName);
+
+	}
+
+
+	private String ghostToString(GHOST g){
+		if(g == GHOST.BLINKY)
+			return "BLINKY";
+		else if(g == GHOST.INKY)
+			return "INKY";
+		else if(g == GHOST.PINKY)
+			return "PINKY";
+		else if(g == GHOST.SUE)
+			return "SUE";
+		else
+			return "NONE";
+		
+	}
+}

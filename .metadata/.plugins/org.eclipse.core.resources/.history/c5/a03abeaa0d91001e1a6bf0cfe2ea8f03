@@ -1,0 +1,57 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.ghosts.actions;
+
+import es.ucm.fdi.ici.Action;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.ghosts.Utiles;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class MoveAwayGhostAction implements Action {
+
+	GHOST ghost;
+	public MoveAwayGhostAction(GHOST ghost) {
+		this.ghost = ghost;
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		Utiles.emptySection(ghost);
+		
+		if (game.doesGhostRequireAction(ghost))        //if it requires an action
+        {
+	
+			double distance, distancemin = Double.MAX_VALUE;
+			GHOST ghostnear = null;
+	        MOVE movepacman = null;
+	        MOVE moveghost = null;
+	
+	        movepacman = game.getApproximateNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost), game.getPacmanCurrentNodeIndex(), game.getGhostLastMoveMade(ghost), DM.PATH);
+	
+	        for(GHOST g: GHOST.values()) {
+	            
+	            if(g!= ghost && game.isGhostEdible(g)) {
+	                
+	                distance = game.getDistance(game.getGhostCurrentNodeIndex(g), game.getGhostCurrentNodeIndex(ghost), game.getGhostLastMoveMade(g),DM.PATH);
+	                if(distancemin > distance)
+	                    ghostnear = g;
+	                distancemin = Math.min(distancemin, distance);
+	            }				
+	        }
+	
+	        if(ghostnear != null)
+	            moveghost = game.getApproximateNextMoveAwayFromTarget(game.getGhostCurrentNodeIndex(ghost), game.getGhostCurrentNodeIndex(ghostnear), game.getGhostLastMoveMade(ghost), DM.PATH); 
+	
+	        if(movepacman != moveghost && moveghost != null)
+	            return moveghost;
+	        else
+	            return game.getApproximateNextMoveAwayFromTarget(game.getGhostCurrentNodeIndex(ghost), game.getPacmanCurrentNodeIndex(), game.getGhostLastMoveMade(ghost), DM.PATH);
+        }
+		return MOVE.NEUTRAL;
+    }
+
+    @Override
+	public String getActionId() {
+		return ghost + "moves away from edible ghosts";
+	}
+}

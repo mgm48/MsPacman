@@ -1,0 +1,204 @@
+(defmodule BLINKY-ACTIONS
+
+	(import SECTIONS ?ALL-SECTIONS ?SECTION-STATUS)
+
+	;FACTS ASSERTED BY GAME INPUT
+	(deftemplate BLINKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols INKY PINKY SUE NONE))
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols INKY PINKY SUE NONE))
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+	)
+		
+	(deftemplate INKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY PINKY SUE)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY PINKY SUE)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+	)
+		
+	(deftemplate PINKY
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY SUE)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY SUE)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+
+	)
+
+	(deftemplate SUE
+		(slot edible (type SYMBOL))
+		(slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY PINKY)) 
+		(slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY PINKY)) 
+		(slot nearGhostEdibleDistance (type NUMBER))
+		(slot nearGhostChasingDistance (type NUMBER))
+		(slot securePath (type SYMBOL))
+		(slot pacmanClosestPPillDistance (type NUMBER))
+		(slot pacmanDistance (type NUMBER))
+
+	)
+		
+	(deftemplate MSPACMAN 
+		(slot closestPPill (type NUMBER))
+		(slot mindistancePPill (type NUMBER))
+		(slot nextJunction (type NUMBER))
+		(slot nearestGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY PINKY SUE)) 
+		(slot nearestGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY PINKY SUE))
+		
+	)
+		
+	;DEFINITION OF THE ACTION FACT
+	(deftemplate ACTION
+		(slot id) (slot info (default "")) (slot priority (type NUMBER) ) ; mandatory slots
+		(slot runawaystrategy (type SYMBOL)) ; Extra slot for the runaway action
+		(slot ghost (type SYMBOL)(allowed-symbols BLINKY INKY PINKY SUE))
+		(slot powerpill (type NUMBER))
+		(slot junction (type NUMBER))
+	) 
+
+	;RULES 
+	(defrule BLINKYrunsAwayMSPACMANclosePPill
+		(BLINKY (edible false) (pacmanClosestPPillDistance ?dp))
+		(MSPACMAN (closestPPill ?p) (mindistancePPill ?d)) (>= ?dp ?d)) 
+		=>  
+		(assert 
+			(ACTION (id BLINKYrunsAway) (info "MSPacMan cerca PPill") (priority 50) 
+			)
+		)
+	)
+
+	(defrule BLINKYrunsAway
+		(BLINKY (edible true)) 
+		=>  
+		(assert 
+			(ACTION (id BLINKYrunsAway) (info "Comestible --> huir") (priority 30) 
+				(runawaystrategy CORNER)
+			)
+		)
+	)
+		
+	(defrule BLINKYchases
+		(BLINKY (edible false)) 
+		=> 
+		(assert (ACTION (id BLINKYchases) (info "No comestible --> perseguir")  (priority 10) ))
+	)	
+		
+	(defrule BLINKYrunsAwayEdibleGhosts	
+		(BLINKY (edible true) (nearGhostEdible ?g) (nearGhostEdibleDistance ?d))
+		(test (< ?d 20))
+		=> 
+		(assert (ACTION (id BLINKYrunsAwayEdibleGhosts) (info "Cerca de ghost comestible --> huir")  (priority 50) 
+		(ghost ?g))
+		)
+	)	
+
+	(defrule BLINKYrunsToProtectingGhosts	
+		(BLINKY (edible true) (nearGhostChasing ?g) (nearGhostEdibleDistance ?d) (securePath true))
+		(test (> ?d 20))
+		=> 
+		(assert (ACTION (id BLINKYrunsToProtectingGhosts) (info "Camino seguro a ghost protecting --> me protegen")  (priority 50) 
+		(ghost ?g))
+		)
+	)	
+
+	(defrule BLINKYblocksPowerPills	
+		(MSPACMAN (mindistancePPill ?d) (closestPPill ?p))
+		(BLINKY (edible false) (pacmanClosestPPillDistance ?dp))
+		(test (< ?dp ?d))
+		=> 
+		(assert (ACTION (id BLINKYblocksPowerPills) (info "Mas cerca de ppill que pacman --> proteger ppill")  (priority 50) 
+		(powerpill ?p))
+		)
+	)
+
+	(defrule BLINKYblocksNextJunction
+		(MSPACMAN (nextJunction ?j) (nearestGhostChasing ?g)
+		(BLINKY (edible false) (pacmanDistance ?d))
+		(test (!= ?g BLINKY)(<= ?d 30)
+		=> 
+		(assert (ACTION (id  BLINKYblocksNextJunction) (info "Cerca de pacman pero no perseguidor principal --> bloquear junction")  (priority 50) 
+		(junction ?j))
+		)
+	)
+
+	(defrule BLINKYprotect
+		(BLINKY (edible false) (nearGhostEdible ?n))
+		(test (!= ?n NONE)
+		=> 
+		(assert (ACTION (id  BLINKYprotect) (info "Protejo a mi pana")  (priority 50) 
+		(nearGhostEdible ?n))
+		)
+	)
+
+	(defrule BLINKYblockSection
+		(BLINKY (edible false) (pacmanDistance ?d))
+		(test (>= ?d 30)
+		=> 
+		(assert (ACTION (id  BLINKYblockSection) (info "Bloqueo la seccion")  (priority 60) 
+		)
+	)
+
+	(defrule BlinkyUpdateSection
+		?s <- (?ALL-SECTIONS (section ?section))
+		(BLINKY (section ?currentSection))
+		(or
+			(and (test (neq ?currentSection "NONE"))
+				(not (ACTION (id BLINKYprotect)))
+				(modify ?s (?SECTION-STATUS (section ?currentSection) (status valid) (occupied none))))
+				
+			(and (test (eq ?currentSection "NONE"))
+				(not (ACTION (id BLINKYprotect)))
+				(not (SECTION-STATUS (section ?section) (occupied busy)))
+				(bind ?newSection (first $?section))
+				(modify ?s (?SECTION-STATUS (section ?newSection) (status valid) (occupied none))))
+
+			(and (test (eq ?currentSection "NONE"))
+				(ACTION (id BLINKYprotect))
+				(modify ?s (?SECTION-STATUS (section "NONE") (status valid) (occupied none))))
+		)
+	)
+
+	(defrule BlinkyStoreSection
+		?b <- (BLINKY (edible true) (pacmanDistance ?d) (section $?s))
+		(test (>= ?d 30))
+		(not (?SECTION-STATUS (section $?s) (occupied busy)))
+		=>
+		(if (member$ "section1" ?s)
+			then (assert (?SECTION-STATUS (section section1) (status valid) (occupied none))))
+		(if (member$ "section2" ?s)
+			then (assert (?SECTION-STATUS (section section2) (status valid) (occupied none))))
+		(if (member$ "section3" ?s)
+			then (assert (?SECTION-STATUS (section section3) (status valid) (occupied none))))
+		(if (member$ "section4" ?s)
+			then (assert (?SECTION-STATUS (section section4) (status valid) (occupied none))))
+	)
+
+	(defrule BlinkySectionActions
+		?s <- (?ALL-SECTIONS (section ?section))
+		(BLINKY (section ?section))
+		=>
+		(switch ?section
+			(case "section1" then
+				(printout t "Realizando acción para section1" crlf))
+			(case "section2" then
+				(printout t "Realizando acción para section2" crlf))
+			(case "section3" then
+				(printout t "Realizando acción para section3" crlf))
+			(case "section4" then
+				(printout t "Realizando acción para section4" crlf))
+			(case "NONE" then
+				(printout t "Realizando acción para NONE" crlf))
+		)
+	)
+)

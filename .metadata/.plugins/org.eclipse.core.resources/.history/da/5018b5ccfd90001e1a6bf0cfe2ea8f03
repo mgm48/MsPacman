@@ -1,0 +1,46 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.ghosts.actions;
+
+import es.ucm.fdi.ici.Action;
+import es.ucm.fdi.ici.c2324.practica2.grupoYY.ghosts.Utiles;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.GHOST;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class ProtectAction implements Action{
+
+	GHOST ghost;
+	public ProtectAction(GHOST ghost) {
+		this.ghost = ghost;
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		
+		Utiles.emptySection(ghost);
+		
+		 if (game.doesGhostRequireAction(ghost))        //if it requires an action
+	        {
+			double distance, distancemin = Double.MAX_VALUE;
+			GHOST ghostnear = null;
+			for(GHOST g: GHOST.values()) {
+					
+					if(g!= ghost) {
+						
+						distance = game.getDistance(game.getGhostCurrentNodeIndex(g),game.getGhostCurrentNodeIndex(ghost), game.getGhostLastMoveMade(g),DM.PATH);
+						if(distancemin > distance)
+							ghostnear = g;
+						distancemin = Math.min(distancemin, distance);
+					}				
+				}	
+					
+			return game.getApproximateNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost), game.getGhostCurrentNodeIndex(ghostnear), game.getGhostLastMoveMade(ghost), DM.PATH);
+	       }
+		 return MOVE.NEUTRAL;
+	}
+
+	@Override
+	public String getActionId() {
+		return ghost + "protects";
+	}
+}

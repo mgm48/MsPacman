@@ -1,0 +1,33 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions;
+
+import es.ucm.fdi.ici.Action;
+import es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.Utils;
+import es.ucm.fdi.ici.rules.RulesAction;
+import jess.Fact;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+public class SectionMoveAction implements RulesAction {
+
+	@Override
+	public String getActionId() {
+		return "pacman moves section";
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		int sec = Utils.bestSectionToMove(game);
+		int junction = Utils.RandomJunctionInSection(sec, game);
+		
+		return game.getApproximateNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), 
+				junction, game.getPacmanLastMoveMade(), DM.PATH);
+	}
+
+	@Override
+	public void parseFact(Fact actionFact) {
+		
+		
+	}
+
+}

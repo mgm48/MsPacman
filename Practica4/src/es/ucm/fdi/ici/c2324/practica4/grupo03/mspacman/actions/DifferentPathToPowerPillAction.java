@@ -1,0 +1,64 @@
+package es.ucm.fdi.ici.c2324.practica4.grupo03.mspacman.actions;
+
+
+import es.ucm.fdi.ici.rules.RulesAction;
+import jess.Fact;
+import jess.JessException;
+import jess.Value;
+import pacman.game.Constants.DM;
+import pacman.game.Constants.MOVE;
+import pacman.game.Game;
+
+
+public class DifferentPathToPowerPillAction implements RulesAction {
+	
+	private int PPIndex;
+
+	@Override
+	public String getActionId() {
+		return "DifferentPathToPowerPill";
+	}
+
+	@Override
+	public MOVE execute(Game game) {
+		int pacmanNodeIndex = game.getPacmanCurrentNodeIndex();
+        MOVE bestMove = null;
+        MOVE moveAlFantasma = game.getApproximateNextMoveTowardsTarget(pacmanNodeIndex, PPIndex, game.getPacmanLastMoveMade(), DM.PATH);
+        int shortestDistance = Integer.MAX_VALUE;
+        // Si el fantasma está en el camino, busca un camino alternativo.
+        for(MOVE move : game.getPossibleMoves(pacmanNodeIndex, game.getPacmanLastMoveMade())) {
+        	if(move != moveAlFantasma) {
+        		int nextNodeIndex = game.getNeighbour(pacmanNodeIndex, move);
+        		if (nextNodeIndex != -1) {
+                    int distance = game.getShortestPathDistance(nextNodeIndex, PPIndex);
+
+                    if (distance < shortestDistance) {
+                        shortestDistance = distance;
+                        bestMove = move;
+                    }
+                }
+        	}
+        	
+        }
+        
+        return bestMove;
+        
+	}
+
+	@Override
+	public void parseFact(Fact actionFact) {
+		try {
+			Value value = actionFact.getSlotValue("powerpill");
+			if(value == null)
+				return;
+			int strategyValue = value.intValue(null);
+			this.PPIndex = Integer.valueOf(strategyValue);
+		} catch (JessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	
+	
+	
+}

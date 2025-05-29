@@ -1,0 +1,8 @@
+LaunchTargetManager/configs/ExecutorTest=org.eclipse.launchbar.core.launchTargetType.local\:Local
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:Evaluate,org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest (1),org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest (2),org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest (3),org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest (4),org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest (5),org.eclipse.launchbar.core.descriptorType.default\:ExecutorTest
+eclipse.preferences.version=1
+org.eclipse.launchbar.core.descriptorType.default\:Evaluate/activeLaunchMode=run
+org.eclipse.launchbar.core.descriptorType.default\:Evaluate/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

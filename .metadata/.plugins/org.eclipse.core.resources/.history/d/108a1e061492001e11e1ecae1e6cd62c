@@ -1,0 +1,165 @@
+(deftemplate MSPACMAN 
+    (slot nearGhostEdible (type SYMBOL) (allowed-symbols BLINKY INKY PINKY SUE NONE))
+    (slot nearGhostChasing (type SYMBOL) (allowed-symbols BLINKY INKY PINKY SUE NONE))
+    (slot nearGhostEdibleDistance (type NUMBER))
+    (slot nearGhostChasingDistance (type NUMBER))
+    (slot pacmandead (type SYMBOL))
+    (slot mindistancePPill (type NUMBER))
+    (slot closestPP (type NUMBER))
+    (slot mindistancePill (type NUMBER))
+    (slot closestpill (type NUMBER))
+    (slot securePathToEdibleGhost(type SYMBOL))
+    (slot securePathToPP(type SYMBOL))
+    (slot securePathToPill(type SYMBOL))
+)
+    
+
+;DEFINITION OF THE ACTION FACT
+(deftemplate ACTION
+	(slot id) (slot info (default "")) (slot priority (type NUMBER) ) ; mandatory slots
+	(slot runawaystrategy (type SYMBOL)) ; Extra slot for the runaway action
+	(slot ghost (type SYMBOL)(allowed-symbols BLINKY INKY PINKY SUE))
+	(slot powerpill (type NUMBER))
+	(slot pill (type NUMBER))
+) 
+
+ 
+;RULES
+(defrule PacmanRandom
+	(MSPACMAN (pacmandead true))
+	=>
+	(ACTION (id PacmanRandom) (info "Acción Random") (priority 10))
+)
+
+(defrule PacmanrunsAway
+		(MSPACMAN (nearGhostChasingDistance ?d)  (nearGhostChasing ?g))
+		(test (< ?d 20))
+		=>  
+		(assert 
+			(ACTION (id PacmanrunsAway) (info "Fantasmas cerca ") (priority 30) 
+			(ghost ?g)
+			)
+		)
+	)
+(defrule Pacmanchases
+		(MSPACMAN (nearGhostEdibleDistance ?d) (nearGhostEdible ?g))
+		(test (< ?d 20))
+		=> 
+		(assert 
+		(ACTION (id Pacmanchases) (info " Fantasma comestible ")  (priority 10) 
+		(ghost ?g)
+		)
+	)
+)
+(defrule PacmaneatPills
+		(MSPACMAN (nearGhostEdibleDistance ?d)(nearGhostChasingDistance ?cd) (closestpill ?cp)
+		(test (> ?d 30) (> ?cd 30))
+		=> 
+		(assert 
+		(ACTION (id PacmaneatPills) (info " pacman comiendo pills")  (priority 10) 
+		(pill ?cp)
+		)
+	)
+)
+(defrule PacmaneatPPills
+		(MSPACMAN (nearGhostChasingDistance ?cd) (mindistancePPill ?dP) (closestPP ?cp)
+		(test (> ?cd 20)(>?dP cd)
+		=> 
+		(assert 
+		(ACTION (id PacmaneatPPills) (info " pacman comiendo PP")  (priority 10)
+		(powerpill ?cp)
+		)
+	)
+)
+
+(defrule PacmanattractGhost
+		(MSPACMAN (nearGhostChasingDistance ?cd) (mindistancePPill ?dP) (nearGhostChasing ?gc)
+		(test (< ?cd ?dp)
+		=> 
+		(assert 
+		(ACTION (id PacmanattractGhost) (info " pacman atrayendo fantasmas")  (priority 10)
+		(nearGhostChasing ?gc)
+		)
+	)
+)
+(defrule PacmandiferentPathToPP
+		(MSPACMAN (mindistancePPill ?dP) (closestPP ?cp) (securePathToPP false) (
+		(test (< ?dP 30)
+		=> 
+		(assert 
+		(ACTION (id PacmandiferentPathToPP) (info " pacman buscando nueva ruta a PP")  (priority 10)
+		(powerpill ?cp)
+		)
+	)
+)
+
+(defrule PacmanescapeRouteChasing
+		(MSPACMAN (nearGhostEdible ?g) (securePathToEdibleGhost false)
+		=> 
+		(assert 
+		(ACTION (id PacmanescapeRoute) (info " escape del ghost")  (priority 10)
+		(ghost ?g)
+		(runawaystrategy (CHASING)) ;
+		)
+	)
+)
+(defrule PacmanescapeRoutePP
+		(MSPACMAN (closestPP ?p) (securePathToPP false)
+		=> 
+		(assert 
+		(ACTION (id PacmanescapeRoute) (info " escape de la PP")  (priority 10)
+		(powerpill ?p)
+		(runawaystrategy (PP)) ;
+		)
+	)
+)
+(defrule PacmanescapeRoutePill
+		(MSPACMAN (closestpill ?p) (securePathToPill false)
+		=> 
+		(assert 
+		(ACTION (id PacmanescapeRoute) (info " escape de la Pill")  (priority 10)
+		(pill ?p)
+		(runawaystrategy (Pill)) ;
+		)
+	)
+)
+
+;TODO
+(defrule PacmansectionMove
+		(MSPACMAN (nearGhostChasingDistance ?cd) (mindistancePPill ?dP) (closestPP ?cp)
+		(test (> ?cd 20)(>?dP cd)
+		=> 
+		(assert 
+		(ACTION (id PacmansectionMove) (info " pacman comiendo PP")  (priority 10)
+		(closestPP ?cp)
+		)
+	)
+)
+(defrule PacmansectionMoveByGhost
+		(Pacman (nearGhostChasingDistance ?cd) (mindistancePPill ?dP) (closestPP ?cp)
+		(test (> ?cd 20)(>?dP cd)
+		=> 
+		(assert 
+		(ACTION (id PacmansectionMove) (info " pacman comiendo PP")  (priority 10)
+		(closestPP ?cp)
+		)
+	)
+)
+(defrule PacmansectionMoveByPills
+		(Pacman (nearGhostChasingDistance ?cd) (mindistancePPill ?dP) (closestPP ?cp)
+		(test (> ?cd 20)(>?dP cd)
+		=> 
+		(assert 
+		(ACTION (id PacmansectionMove) (info " pacman comiendo PP")  (priority 10)
+		(closestPP ?cp)
+		)
+	)
+)
+
+	
+	
+	
+	
+	
+	
+	 
